@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog AI Studio</title>
+    <meta http-equiv="refresh" content="60">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        a { color: inherit; text-decoration: none; }
+
+        .header { background: #1e293b; border-bottom: 1px solid #334155; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .header .sub { color: #64748b; font-size: 13px; margin-top: 4px; }
+        .header .live { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #22c55e; }
+        .header .live .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        /* Team Strip */
+        .team-strip { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .team-badge { padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .team-badge .cnt { background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+
+        /* Stats */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }
+        .stat-card .label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+
+        /* Section */
+        .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-hdr h2 { font-size: 18px; }
+        .section-hdr .badge { background: #334155; padding: 4px 12px; border-radius: 6px; font-size: 12px; color: #94a3b8; }
+
+        /* Kanban Board */
+        .kanban { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+        @media (max-width: 900px) { .kanban { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .kanban { grid-template-columns: 1fr; } }
+        .kanban-col { background: #1e293b; border: 1px solid #334155; border-radius: 10px; min-height: 180px; }
+        .kanban-col-hdr { padding: 14px 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+        .kanban-col-hdr .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .kanban-col-body { padding: 10px; }
+
+        .card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; margin-bottom: 8px; transition: all .15s; }
+        .card:hover { border-color: #64748b; transform: translateY(-1px); }
+        .card .title { font-size: 13px; font-weight: 600; color: #f8fafc; margin-bottom: 8px; line-height: 1.5; }
+        .card .row { display: flex; justify-content: space-between; align-items: center; }
+        .card .cat { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+        .card .score { font-size: 13px; font-weight: 700; }
+        .card .date { font-size: 11px; color: #64748b; }
+        .empty { text-align: center; padding: 24px; color: #475569; font-size: 13px; }
+
+        /* Published */
+        .pub-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .pub-table th { text-align: left; padding: 10px 14px; font-size: 12px; color: #64748b; font-weight: 500; border-bottom: 1px solid #334155; background: #0f172a; }
+        .pub-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #1e293b; }
+        .pub-table tr:not(:first-child) { background: #1e293b; }
+        .pub-table tr:hover { background: #253347; }
+
+        .cat-ai { background: rgba(59,130,246,.15); color: #60a5fa; }
+        .cat-health { background: rgba(16,185,129,.15); color: #34d399; }
+        .cat-self { background: rgba(245,158,11,.15); color: #fbbf24; }
+        .sc-high { color: #22c55e; } .sc-mid { color: #eab308; } .sc-low { color: #ef4444; }
+        .grade { font-size: 14px; font-weight: 700; }
+        .gr-S { color: #a78bfa; } .gr-A { color: #60a5fa; } .gr-B { color: #34d399; } .gr-C { color: #fbbf24; } .gr-D { color: #f87171; }
+        .url-link { color: #60a5fa; font-size: 12px; } .url-link:hover { text-decoration: underline; }
+        .refresh { font-size: 11px; color: #475569; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🏢 Blog AI Studio</h1>
+            <div class="sub">콘텐츠 파이프라인 대시보드</div>
+        </div>
+        <div>
+            <div class="live"><div class="dot"></div> Live</div>
+            <div class="refresh">60초마다 자동 새로고침</div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Team Strip -->
+        <div class="team-strip">
+            {% set col_defs = [
+                ("research", "🔍", "리서치팀", "#3B82F6"),
+                ("planning", "📐", "기획팀", "#8B5CF6"),
+                ("writing", "✍️", "라이팅팀", "#10B981"),
+                ("creative", "🎨", "크리에이티브팀", "#F59E0B"),
+                ("editorial", "📋", "편집팀", "#EF4444"),
+                ("done", "✅", "발행 승인", "#22C55E"),
+                ("published", "📤", "발행 완료", "#6B7280")
+            ] %}
+            {% for ck, ce, cn, cc in col_defs %}
+            {% set n = contents | selectattr('team_key', 'equalto', ck) | list | length %}
+            <div class="team-badge" style="background:{{cc}}15;color:{{cc}};border:1px solid {{cc}}33;">
+                {{ce}} {{cn}} <span class="cnt">{{n}}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">전체 콘텐츠</div>
+                <div class="value">{{ contents | length }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">파이프라인 진행 중</div>
+                <div class="value" style="color:#60a5fa;">{{ contents | rejectattr('team_key', 'equalto', 'done') | rejectattr('team_key', 'equalto', 'published') | list | length }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">발행 승인/완료</div>
+                <div class="value" style="color:#22c55e;">{{ contents | selectattr('team_key', 'in', ['done','published']) | list | length }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">평균 검수 점수</div>
+                <div class="value" style="color:#fbbf24;">
+                    {% set scores = contents | selectattr('score') | map(attribute='score') | list %}
+                    {{ '%d' | format(scores | sum / scores | length) if scores else '-' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="section-hdr">
+            <h2>📋 파이프라인 보드</h2>
+            <span class="badge">팀별 진행 현황</span>
+        </div>
+
+        <div class="kanban">
+            {% set board_cols = [
+                ("planning", "📐", "기획팀", "#8B5CF6"),
+                ("writing", "✍️", "라이팅팀", "#10B981"),
+                ("creative", "🎨", "크리에이티브팀", "#F59E0B"),
+                ("editorial", "📋", "편집팀", "#EF4444"),
+                ("done", "✅", "발행 승인", "#22C55E")
+            ] %}
+
+            {% for ck, ce, cn, cc in board_cols %}
+            <div class="kanban-col">
+                <div class="kanban-col-hdr">
+                    <div class="dot" style="background:{{cc}};"></div>
+                    {{ce}} {{cn}}
+                </div>
+                <div class="kanban-col-body">
+                    {% set items = contents | selectattr('team_key', 'equalto', ck) | list %}
+                    {% for c in items %}
+                    <div class="card">
+                        <div class="title">{{ c.title or c.keyword or c.content_id }}</div>
+                        <div class="row">
+                            {% if c.category_key == 'ai_tech' %}
+                                <span class="cat cat-ai">🔵 AI/기술</span>
+                            {% elif c.category_key == 'health' %}
+                                <span class="cat cat-health">🟢 건강</span>
+                            {% elif c.category_key == 'self_improvement' %}
+                                <span class="cat cat-self">🟠 자기계발</span>
+                            {% else %}
+                                <span class="cat" style="background:#33415566;color:#94a3b8;">-</span>
+                            {% endif %}
+
+                            {% if c.score %}
+                                <span class="score {{ 'sc-high' if c.score >= 80 else 'sc-mid' if c.score >= 60 else 'sc-low' }}">{{ c.score | int }}점</span>
+                            {% else %}
+                                <span class="date">{{ c.pub_scheduled }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not items %}
+                        <div class="empty">비어있음</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Published & Tracking -->
+        {% set published = contents | selectattr('team_key', 'equalto', 'published') | list %}
+        {% if published %}
+        <div class="section-hdr">
+            <h2>📊 발행 후 성과 추적</h2>
+            <span class="badge">{{ published | length }}개</span>
+        </div>
+
+        <table class="pub-table">
+            <thead>
+                <tr>
+                    <th>콘텐츠</th>
+                    <th>발행일</th>
+                    <th>1주차</th>
+                    <th>2주차</th>
+                    <th>3주차</th>
+                    <th>등급</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in published %}
+                <tr>
+                    <td style="font-weight:600;max-width:250px;">{{ c.title }}</td>
+                    <td>{{ c.pub_actual or '-' }}</td>
+                    {% for w in ['week_1','week_2','week_3'] %}
+                    <td>
+                        {% if c.stats[w] %}
+                            <div style="font-weight:600;">{{ '{:,}'.format(c.stats[w].views | int) }} 조회</div>
+                            <div style="font-size:11px;color:#94a3b8;">💬 {{ c.stats[w].comments | int }}</div>
+                        {% else %}
+                            <span style="color:#475569;">⏳ 대기</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        {% if c.grade %}
+                            {% set g = c.grade.split(' ')[-1] %}
+                            <span class="grade gr-{{g}}">{{ c.grade }}</span>
+                        {% else %}
+                            <span style="color:#475569;">측정 중</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.pub_url %}
+                            <a href="{{ c.pub_url }}" target="_blank" class="url-link">열기 →</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if not contents %}
+        <div style="text-align:center;padding:60px;color:#475569;">
+            <div style="font-size:40px;margin-bottom:12px;">📝</div>
+            <p>아직 콘텐츠가 없습니다.</p>
+            <p style="margin-top:8px;font-size:14px;">파이프라인을 실행하면 여기에 표시됩니다.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

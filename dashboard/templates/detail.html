@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ content.id }} - Blog AI Studio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: #1e293b; border-bottom: 1px solid #334155; padding: 20px 40px; display: flex; align-items: center; gap: 16px; }
+        .header a { color: #94a3b8; text-decoration: none; font-size: 14px; }
+        .header a:hover { color: #e2e8f0; }
+        .header h1 { font-size: 22px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px 40px; }
+
+        /* Phase Sections */
+        .phase { background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+        .phase-header { padding: 16px 24px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px; }
+        .phase-header .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .phase-header h2 { font-size: 16px; font-weight: 600; }
+        .phase-header .status { margin-left: auto; font-size: 13px; padding: 4px 12px; border-radius: 6px; }
+        .phase-body { padding: 24px; }
+
+        /* Plan Details */
+        .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .plan-item { background: #0f172a; border-radius: 8px; padding: 16px; }
+        .plan-item .label { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+        .plan-item .value { font-size: 14px; line-height: 1.6; }
+
+        /* H-tag Structure */
+        .h-structure { background: #0f172a; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 2; }
+        .h-structure .h1 { color: #f8fafc; font-weight: 700; }
+        .h-structure .h2 { color: #60a5fa; padding-left: 20px; }
+        .h-structure .h3 { color: #94a3b8; padding-left: 40px; }
+
+        /* Article Preview */
+        .article-preview { background: #fff; color: #1e293b; border-radius: 8px; padding: 32px; line-height: 1.8; font-size: 15px; max-height: 600px; overflow-y: auto; }
+        .article-preview h2 { color: #1e293b; font-size: 22px; margin: 24px 0 12px; }
+        .article-preview h3 { color: #374151; font-size: 18px; margin: 16px 0 8px; }
+        .article-preview p { margin-bottom: 12px; }
+        .article-preview ul { margin: 8px 0 16px 24px; }
+        .article-preview li { margin-bottom: 4px; }
+        .article-preview strong { color: #1e40af; }
+
+        /* Review Score */
+        .review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .review-item { background: #0f172a; border-radius: 8px; padding: 16px; text-align: center; }
+        .review-item .check-name { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
+        .review-item .check-score { font-size: 28px; font-weight: 700; }
+        .review-item .check-notes { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .score-high { color: #22c55e; }
+        .score-mid { color: #eab308; }
+        .score-low { color: #ef4444; }
+
+        /* Metadata */
+        .meta-table { width: 100%; }
+        .meta-table td { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 14px; }
+        .meta-table td:first-child { color: #64748b; width: 140px; }
+
+        .full-width { grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/">← 대시보드</a>
+        <h1>{{ content.summary.keyword if content.summary else content.id }}</h1>
+    </div>
+
+    <div class="container">
+
+        <!-- Phase 1: 기획팀 -->
+        <div class="phase">
+            <div class="phase-header">
+                <div class="dot" style="background: #8B5CF6;"></div>
+                <h2>📐 기획팀 — 콘텐츠 기획서</h2>
+                <span class="status" style="background: {{ '#8B5CF622' if content.plan else '#33415566' }}; color: {{ '#8B5CF6' if content.plan else '#64748b' }};">
+                    {{ '완료' if content.plan else '대기' }}
+                </span>
+            </div>
+            {% if content.plan %}
+            <div class="phase-body">
+                <div class="plan-grid">
+                    <div class="plan-item">
+                        <div class="label">검색 의도</div>
+                        <div class="value">{{ content.plan.search_intent | default('분석 중...') }}</div>
+                    </div>
+                    <div class="plan-item">
+                        <div class="label">타겟 독자</div>
+                        <div class="value">{{ content.plan.target_reader | default('-') }}</div>
+                    </div>
+                    <div class="plan-item">
+                        <div class="label">차별화 전략</div>
+                        <div class="value">{{ content.plan.differentiation | default('-') }}</div>
+                    </div>
+                    <div class="plan-item">
+                        <div class="label">톤/스타일</div>
+                        <div class="value">{{ content.plan.tone | default('-') }}</div>
+                    </div>
+                    {% if content.plan.cta %}
+                    <div class="plan-item">
+                        <div class="label">CTA 전략</div>
+                        <div class="value">위치: {{ content.plan.cta.position | default('-') }}<br>내용: {{ content.plan.cta.type | default('-') }}</div>
+                    </div>
+                    {% endif %}
+                    {% if content.plan.images %}
+                    <div class="plan-item">
+                        <div class="label">이미지 기획 ({{ content.plan.images | length }}장)</div>
+                        <div class="value">
+                            {% for img in content.plan.images %}
+                            • {{ img.type }}: {{ img.desc }}<br>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if content.plan.structure %}
+                <div style="margin-top: 16px;">
+                    <div class="h-structure">
+                        <div class="h1">H1: {{ content.plan.structure.h1 | default('-') }}</div>
+                        {% for section in content.plan.structure.sections | default([]) %}
+                        <div class="h2">├─ H2: {{ section.h2 }}</div>
+                        {% for h3 in section.h3 | default([]) %}
+                        <div class="h3">│  └─ H3: {{ h3 }}</div>
+                        {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Phase 2: 라이팅팀 -->
+        <div class="phase">
+            <div class="phase-header">
+                <div class="dot" style="background: #10B981;"></div>
+                <h2>✍️ 라이팅팀 — 본문</h2>
+                <span class="status" style="background: {{ '#10B98122' if content.article else '#33415566' }}; color: {{ '#10B981' if content.article else '#64748b' }};">
+                    {{ '완료' if content.article else '대기' }}
+                </span>
+            </div>
+            {% if content.article %}
+            <div class="phase-body">
+                <div class="article-preview">
+                    {{ content.article | safe }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Phase 3+4: 크리에이티브팀 -->
+        <div class="phase">
+            <div class="phase-header">
+                <div class="dot" style="background: #F59E0B;"></div>
+                <h2>🎨 크리에이티브팀 — 이미지/썸네일</h2>
+                <span class="status" style="background: {{ '#F59E0B22' if content.images else '#33415566' }}; color: {{ '#F59E0B' if content.images else '#64748b' }};">
+                    {{ '완료' if content.images else '대기' }}
+                </span>
+            </div>
+            {% if content.images %}
+            <div class="phase-body">
+                <p>생성된 이미지: {{ content.images.generated | length }}장 / 계획: {{ content.images.total_planned }}장</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Phase 5+6: 편집팀 -->
+        <div class="phase">
+            <div class="phase-header">
+                <div class="dot" style="background: #EF4444;"></div>
+                <h2>📋 편집팀 — 메타데이터 & 검수</h2>
+                <span class="status" style="background: {{ '#EF444422' if content.review else '#33415566' }}; color: {{ '#EF4444' if content.review else '#64748b' }};">
+                    {{ '완료' if content.review else '대기' }}
+                </span>
+            </div>
+            <div class="phase-body">
+                {% if content.metadata %}
+                <h3 style="font-size: 14px; color: #94a3b8; margin-bottom: 12px;">메타데이터</h3>
+                <table class="meta-table">
+                    <tr><td>SEO 제목</td><td>{{ content.metadata.seo_title | default('-') }}</td></tr>
+                    <tr><td>디스크립션</td><td>{{ content.metadata.meta_description | default('-') }}</td></tr>
+                    <tr><td>슬러그</td><td>{{ content.metadata.slug | default('-') }}</td></tr>
+                    <tr><td>태그</td><td>{{ content.metadata.tags | default([]) | join(', ') }}</td></tr>
+                    <tr><td>OG 제목</td><td>{{ content.metadata.og_title | default('-') }}</td></tr>
+                </table>
+                {% endif %}
+
+                {% if content.review and content.review.checks %}
+                <h3 style="font-size: 14px; color: #94a3b8; margin: 24px 0 12px;">검수 점수</h3>
+                <div class="review-grid">
+                    {% for name, check in content.review.checks.items() %}
+                    <div class="review-item">
+                        <div class="check-name">{{ name | upper }}</div>
+                        <div class="check-score {{ 'score-high' if check.score >= 80 else 'score-mid' if check.score >= 60 else 'score-low' }}">
+                            {{ check.score }}
+                        </div>
+                        <div class="check-notes">{{ check.notes | default('') }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 20px; text-align: center; padding: 20px; background: #0f172a; border-radius: 8px;">
+                    <div style="font-size: 14px; color: #94a3b8;">종합 점수</div>
+                    <div style="font-size: 48px; font-weight: 700;" class="{{ 'score-high' if content.review.score >= 80 else 'score-mid' if content.review.score >= 60 else 'score-low' }}">
+                        {{ content.review.score }}
+                    </div>
+                    <div style="font-size: 16px; margin-top: 8px;">
+                        {{ '✅ 발행 승인' if content.review.pass else '🔄 수정 필요' }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
