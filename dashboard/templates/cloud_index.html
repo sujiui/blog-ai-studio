@@ -1,245 +1,690 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog AI Studio</title>
     <meta http-equiv="refresh" content="60">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        /* ─── Theme Variables ─── */
+        :root {
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: 150ms ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
+            --bg-hover: #1f1f1f;
+            --bg-elevated: #222222;
+            --border: #262626;
+            --border-subtle: #1e1e1e;
+            --text-primary: #ededed;
+            --text-secondary: #a0a0a0;
+            --text-tertiary: #666666;
+            --accent: #ededed;
+            --accent-muted: rgba(255,255,255,.06);
+            --green: #00d47b;
+            --green-muted: rgba(0,212,123,.12);
+            --blue: #0090ff;
+            --blue-muted: rgba(0,144,255,.12);
+            --purple: #8b5cf6;
+            --purple-muted: rgba(139,92,246,.12);
+            --amber: #f59e0b;
+            --amber-muted: rgba(245,158,11,.12);
+            --red: #ef4444;
+            --red-muted: rgba(239,68,68,.12);
+            --toggle-bg: #262626;
+            --toggle-knob: #ededed;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafafa;
+            --bg-tertiary: #f5f5f5;
+            --bg-hover: #f0f0f0;
+            --bg-elevated: #ffffff;
+            --border: #e5e5e5;
+            --border-subtle: #f0f0f0;
+            --text-primary: #171717;
+            --text-secondary: #666666;
+            --text-tertiary: #a0a0a0;
+            --accent: #171717;
+            --accent-muted: rgba(0,0,0,.04);
+            --green: #00a85a;
+            --green-muted: rgba(0,168,90,.08);
+            --blue: #0070e0;
+            --blue-muted: rgba(0,112,224,.08);
+            --purple: #7c3aed;
+            --purple-muted: rgba(124,58,237,.08);
+            --amber: #d97706;
+            --amber-muted: rgba(217,119,6,.08);
+            --red: #dc2626;
+            --red-muted: rgba(220,38,38,.08);
+            --toggle-bg: #e5e5e5;
+            --toggle-knob: #171717;
+        }
+
+        /* ─── Reset ─── */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            transition: background var(--transition), color var(--transition);
+        }
         a { color: inherit; text-decoration: none; }
 
-        .header { background: #1e293b; border-bottom: 1px solid #334155; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 24px; }
-        .header .sub { color: #64748b; font-size: 13px; margin-top: 4px; }
-        .header .live { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #22c55e; }
-        .header .live .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        /* ─── Navbar ─── */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 48px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-primary);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        .nav-sep {
+            color: var(--text-tertiary);
+            font-size: 14px;
+            font-weight: 300;
+        }
+        .nav-page {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 500;
+        }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: var(--toggle-bg);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            transition: background var(--transition);
+        }
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--toggle-knob);
+            transition: transform var(--transition);
+        }
+        [data-theme="light"] .theme-toggle::after {
+            transform: translateX(18px);
+        }
+        .theme-icon {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            line-height: 1;
+        }
 
-        /* Team Strip */
-        .team-strip { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-        .team-badge { padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .team-badge .cnt { background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+        /* ─── Container ─── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
 
-        /* Stats */
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
-        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }
-        .stat-card .label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
-        .stat-card .value { font-size: 28px; font-weight: 700; }
+        /* ─── Stats Row ─── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        .stat {
+            background: var(--bg-secondary);
+            padding: 20px 24px;
+            transition: background var(--transition);
+        }
+        .stat:hover { background: var(--bg-hover); }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        @media (max-width: 640px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
 
-        /* Section */
-        .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .section-hdr h2 { font-size: 18px; }
-        .section-hdr .badge { background: #334155; padding: 4px 12px; border-radius: 6px; font-size: 12px; color: #94a3b8; }
+        /* ─── Team Pills ─── */
+        .team-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        .team-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            transition: all var(--transition);
+        }
+        .team-pill:hover {
+            background: var(--bg-hover);
+            border-color: var(--text-tertiary);
+        }
+        .team-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        .team-count {
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
 
-        /* Kanban Board */
-        .kanban { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+        /* ─── Section ─── */
+        .section {
+            margin-bottom: 36px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+        .section-badge {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            background: var(--accent-muted);
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-weight: 500;
+        }
+
+        /* ─── Kanban ─── */
+        .kanban {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
         @media (max-width: 900px) { .kanban { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .kanban { grid-template-columns: 1fr; } }
-        .kanban-col { background: #1e293b; border: 1px solid #334155; border-radius: 10px; min-height: 180px; }
-        .kanban-col-hdr { padding: 14px 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
-        .kanban-col-hdr .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .kanban-col-body { padding: 10px; }
 
-        .card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; margin-bottom: 8px; transition: all .15s; }
-        .card:hover { border-color: #64748b; transform: translateY(-1px); }
-        .card .title { font-size: 13px; font-weight: 600; color: #f8fafc; margin-bottom: 8px; line-height: 1.5; }
-        .card .row { display: flex; justify-content: space-between; align-items: center; }
-        .card .cat { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
-        .card .score { font-size: 13px; font-weight: 700; }
-        .card .date { font-size: 11px; color: #64748b; }
-        .empty { text-align: center; padding: 24px; color: #475569; font-size: 13px; }
+        .kanban-col {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .col-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .col-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .col-count {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            background: var(--accent-muted);
+            padding: 1px 7px;
+            border-radius: 100px;
+        }
+        .col-body {
+            padding: 8px;
+            flex: 1;
+        }
 
-        /* Published */
-        .pub-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        .pub-table th { text-align: left; padding: 10px 14px; font-size: 12px; color: #64748b; font-weight: 500; border-bottom: 1px solid #334155; background: #0f172a; }
-        .pub-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #1e293b; }
-        .pub-table tr:not(:first-child) { background: #1e293b; }
-        .pub-table tr:hover { background: #253347; }
+        /* ─── Card ─── */
+        .card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            transition: all var(--transition);
+            cursor: default;
+        }
+        .card:hover {
+            border-color: var(--text-tertiary);
+        }
+        .card-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .tag-ai { background: var(--blue-muted); color: var(--blue); }
+        .tag-health { background: var(--green-muted); color: var(--green); }
+        .tag-self { background: var(--amber-muted); color: var(--amber); }
+        .tag-none { background: var(--accent-muted); color: var(--text-tertiary); }
 
-        .cat-ai { background: rgba(59,130,246,.15); color: #60a5fa; }
-        .cat-health { background: rgba(16,185,129,.15); color: #34d399; }
-        .cat-self { background: rgba(245,158,11,.15); color: #fbbf24; }
-        .sc-high { color: #22c55e; } .sc-mid { color: #eab308; } .sc-low { color: #ef4444; }
-        .grade { font-size: 14px; font-weight: 700; }
-        .gr-S { color: #a78bfa; } .gr-A { color: #60a5fa; } .gr-B { color: #34d399; } .gr-C { color: #fbbf24; } .gr-D { color: #f87171; }
-        .url-link { color: #60a5fa; font-size: 12px; } .url-link:hover { text-decoration: underline; }
-        .refresh { font-size: 11px; color: #475569; }
+        .score {
+            font-size: 12px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        .sc-high { color: var(--green); }
+        .sc-mid { color: var(--amber); }
+        .sc-low { color: var(--red); }
+        .meta-date { font-size: 11px; color: var(--text-tertiary); }
+
+        .empty-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 80px;
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        /* ─── Table ─── */
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        td {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--bg-hover); }
+        .td-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            max-width: 260px;
+        }
+        .td-views {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .td-comments {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+        .td-pending { color: var(--text-tertiary); font-size: 12px; }
+
+        /* Grades */
+        .grade {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 4px;
+        }
+        .gr-S { color: var(--purple); background: var(--purple-muted); }
+        .gr-A { color: var(--blue); background: var(--blue-muted); }
+        .gr-B { color: var(--green); background: var(--green-muted); }
+        .gr-C { color: var(--amber); background: var(--amber-muted); }
+        .gr-D { color: var(--red); background: var(--red-muted); }
+
+        .link {
+            color: var(--text-tertiary);
+            font-size: 12px;
+            font-weight: 500;
+            transition: color var(--transition);
+        }
+        .link:hover { color: var(--text-primary); }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--text-tertiary);
+        }
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            background: var(--accent-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .empty-state .hint {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        /* ─── Footer ─── */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            border-top: 1px solid var(--border);
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>🏢 Blog AI Studio</h1>
-            <div class="sub">콘텐츠 파이프라인 대시보드</div>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="logo">Blog AI Studio</span>
+            <span class="nav-sep">/</span>
+            <span class="nav-page">Pipeline</span>
         </div>
-        <div>
-            <div class="live"><div class="dot"></div> Live</div>
-            <div class="refresh">60초마다 자동 새로고침</div>
+        <div class="navbar-right">
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                Live
+            </div>
+            <span class="theme-icon" id="themeLabel">dark</span>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
         </div>
-    </div>
+    </nav>
 
     <div class="container">
 
-        <!-- Team Strip -->
-        <div class="team-strip">
-            {% set col_defs = [
-                ("research", "🔍", "리서치팀", "#3B82F6"),
-                ("planning", "📐", "기획팀", "#8B5CF6"),
-                ("writing", "✍️", "라이팅팀", "#10B981"),
-                ("creative", "🎨", "크리에이티브팀", "#F59E0B"),
-                ("editorial", "📋", "편집팀", "#EF4444"),
-                ("done", "✅", "발행 승인", "#22C55E"),
-                ("published", "📤", "발행 완료", "#6B7280")
-            ] %}
-            {% for ck, ce, cn, cc in col_defs %}
-            {% set n = contents | selectattr('team_key', 'equalto', ck) | list | length %}
-            <div class="team-badge" style="background:{{cc}}15;color:{{cc}};border:1px solid {{cc}}33;">
-                {{ce}} {{cn}} <span class="cnt">{{n}}</span>
-            </div>
-            {% endfor %}
-        </div>
-
         <!-- Stats -->
-        <div class="stats">
-            <div class="stat-card">
-                <div class="label">전체 콘텐츠</div>
-                <div class="value">{{ contents | length }}</div>
+        <div class="stats-row">
+            <div class="stat">
+                <div class="stat-label">Total</div>
+                <div class="stat-value">{{ contents | length }}</div>
             </div>
-            <div class="stat-card">
-                <div class="label">파이프라인 진행 중</div>
-                <div class="value" style="color:#60a5fa;">{{ contents | rejectattr('team_key', 'equalto', 'done') | rejectattr('team_key', 'equalto', 'published') | list | length }}</div>
+            <div class="stat">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value" style="color:var(--blue);">{{ contents | rejectattr('team_key', 'equalto', 'done') | rejectattr('team_key', 'equalto', 'published') | list | length }}</div>
             </div>
-            <div class="stat-card">
-                <div class="label">발행 승인/완료</div>
-                <div class="value" style="color:#22c55e;">{{ contents | selectattr('team_key', 'in', ['done','published']) | list | length }}</div>
+            <div class="stat">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value" style="color:var(--green);">{{ contents | selectattr('team_key', 'in', ['done','published']) | list | length }}</div>
             </div>
-            <div class="stat-card">
-                <div class="label">평균 검수 점수</div>
-                <div class="value" style="color:#fbbf24;">
+            <div class="stat">
+                <div class="stat-label">Avg Score</div>
+                <div class="stat-value" style="color:var(--amber);">
                     {% set scores = contents | selectattr('score') | map(attribute='score') | list %}
-                    {{ '%d' | format(scores | sum / scores | length) if scores else '-' }}
+                    {{ '%d' | format(scores | sum / scores | length) if scores else '--' }}
                 </div>
             </div>
+        </div>
+
+        <!-- Team Pills -->
+        <div class="team-row">
+            {% set col_defs = [
+                ("research", "리서치", "#3B82F6"),
+                ("planning", "기획", "#8B5CF6"),
+                ("writing", "라이팅", "#10B981"),
+                ("creative", "크리에이티브", "#F59E0B"),
+                ("editorial", "편집", "#EF4444"),
+                ("done", "승인", "#22C55E"),
+                ("published", "발행", "#6B7280")
+            ] %}
+            {% for ck, cn, cc in col_defs %}
+            {% set n = contents | selectattr('team_key', 'equalto', ck) | list | length %}
+            <div class="team-pill">
+                <div class="team-dot" style="background:{{cc}};"></div>
+                {{cn}}
+                <span class="team-count">{{n}}</span>
+            </div>
+            {% endfor %}
         </div>
 
         <!-- Kanban Board -->
-        <div class="section-hdr">
-            <h2>📋 파이프라인 보드</h2>
-            <span class="badge">팀별 진행 현황</span>
-        </div>
-
-        <div class="kanban">
-            {% set board_cols = [
-                ("planning", "📐", "기획팀", "#8B5CF6"),
-                ("writing", "✍️", "라이팅팀", "#10B981"),
-                ("creative", "🎨", "크리에이티브팀", "#F59E0B"),
-                ("editorial", "📋", "편집팀", "#EF4444"),
-                ("done", "✅", "발행 승인", "#22C55E")
-            ] %}
-
-            {% for ck, ce, cn, cc in board_cols %}
-            <div class="kanban-col">
-                <div class="kanban-col-hdr">
-                    <div class="dot" style="background:{{cc}};"></div>
-                    {{ce}} {{cn}}
-                </div>
-                <div class="kanban-col-body">
-                    {% set items = contents | selectattr('team_key', 'equalto', ck) | list %}
-                    {% for c in items %}
-                    <div class="card">
-                        <div class="title">{{ c.title or c.keyword or c.content_id }}</div>
-                        <div class="row">
-                            {% if c.category_key == 'ai_tech' %}
-                                <span class="cat cat-ai">🔵 AI/기술</span>
-                            {% elif c.category_key == 'health' %}
-                                <span class="cat cat-health">🟢 건강</span>
-                            {% elif c.category_key == 'self_improvement' %}
-                                <span class="cat cat-self">🟠 자기계발</span>
-                            {% else %}
-                                <span class="cat" style="background:#33415566;color:#94a3b8;">-</span>
-                            {% endif %}
-
-                            {% if c.score %}
-                                <span class="score {{ 'sc-high' if c.score >= 80 else 'sc-mid' if c.score >= 60 else 'sc-low' }}">{{ c.score | int }}점</span>
-                            {% else %}
-                                <span class="date">{{ c.pub_scheduled }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% if not items %}
-                        <div class="empty">비어있음</div>
-                    {% endif %}
-                </div>
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Pipeline Board</span>
+                <span class="section-badge">by team</span>
             </div>
-            {% endfor %}
+
+            <div class="kanban">
+                {% set board_cols = [
+                    ("planning", "기획", "#8B5CF6"),
+                    ("writing", "라이팅", "#10B981"),
+                    ("creative", "크리에이티브", "#F59E0B"),
+                    ("editorial", "편집", "#EF4444"),
+                    ("done", "승인", "#22C55E")
+                ] %}
+
+                {% for ck, cn, cc in board_cols %}
+                {% set items = contents | selectattr('team_key', 'equalto', ck) | list %}
+                <div class="kanban-col">
+                    <div class="col-header">
+                        <div class="col-dot" style="background:{{cc}};"></div>
+                        {{cn}}
+                        <span class="col-count">{{items | length}}</span>
+                    </div>
+                    <div class="col-body">
+                        {% for c in items %}
+                        <div class="card">
+                            <div class="card-title">{{ c.title or c.keyword or c.content_id }}</div>
+                            <div class="card-meta">
+                                {% if c.category_key == 'ai_tech' %}
+                                    <span class="tag tag-ai">AI/Tech</span>
+                                {% elif c.category_key == 'health' %}
+                                    <span class="tag tag-health">Health</span>
+                                {% elif c.category_key == 'self_improvement' %}
+                                    <span class="tag tag-self">Growth</span>
+                                {% else %}
+                                    <span class="tag tag-none">--</span>
+                                {% endif %}
+
+                                {% if c.score %}
+                                    <span class="score {{ 'sc-high' if c.score >= 80 else 'sc-mid' if c.score >= 60 else 'sc-low' }}">{{ c.score | int }}</span>
+                                {% else %}
+                                    <span class="meta-date">{{ c.pub_scheduled }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not items %}
+                            <div class="empty-col">No items</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
 
         <!-- Published & Tracking -->
         {% set published = contents | selectattr('team_key', 'equalto', 'published') | list %}
         {% if published %}
-        <div class="section-hdr">
-            <h2>📊 발행 후 성과 추적</h2>
-            <span class="badge">{{ published | length }}개</span>
-        </div>
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">Performance Tracking</span>
+                <span class="section-badge">{{ published | length }} published</span>
+            </div>
 
-        <table class="pub-table">
-            <thead>
-                <tr>
-                    <th>콘텐츠</th>
-                    <th>발행일</th>
-                    <th>1주차</th>
-                    <th>2주차</th>
-                    <th>3주차</th>
-                    <th>등급</th>
-                    <th>URL</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in published %}
-                <tr>
-                    <td style="font-weight:600;max-width:250px;">{{ c.title }}</td>
-                    <td>{{ c.pub_actual or '-' }}</td>
-                    {% for w in ['week_1','week_2','week_3'] %}
-                    <td>
-                        {% if c.stats[w] %}
-                            <div style="font-weight:600;">{{ '{:,}'.format(c.stats[w].views | int) }} 조회</div>
-                            <div style="font-size:11px;color:#94a3b8;">💬 {{ c.stats[w].comments | int }}</div>
-                        {% else %}
-                            <span style="color:#475569;">⏳ 대기</span>
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                    <td>
-                        {% if c.grade %}
-                            {% set g = c.grade.split(' ')[-1] %}
-                            <span class="grade gr-{{g}}">{{ c.grade }}</span>
-                        {% else %}
-                            <span style="color:#475569;">측정 중</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if c.pub_url %}
-                            <a href="{{ c.pub_url }}" target="_blank" class="url-link">열기 →</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Content</th>
+                            <th>Published</th>
+                            <th>Week 1</th>
+                            <th>Week 2</th>
+                            <th>Week 3</th>
+                            <th>Grade</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in published %}
+                        <tr>
+                            <td class="td-title">{{ c.title }}</td>
+                            <td>{{ c.pub_actual or '--' }}</td>
+                            {% for w in ['week_1','week_2','week_3'] %}
+                            <td>
+                                {% if c.stats[w] %}
+                                    <div class="td-views">{{ '{:,}'.format(c.stats[w].views | int) }}</div>
+                                    <div class="td-comments">{{ c.stats[w].comments | int }} comments</div>
+                                {% else %}
+                                    <span class="td-pending">--</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td>
+                                {% if c.grade %}
+                                    {% set g = c.grade.split(' ')[-1] %}
+                                    <span class="grade gr-{{g}}">{{g}}</span>
+                                {% else %}
+                                    <span class="td-pending">--</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if c.pub_url %}
+                                    <a href="{{ c.pub_url }}" target="_blank" class="link">Open</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         {% endif %}
 
+        <!-- Empty State -->
         {% if not contents %}
-        <div style="text-align:center;padding:60px;color:#475569;">
-            <div style="font-size:40px;margin-bottom:12px;">📝</div>
-            <p>아직 콘텐츠가 없습니다.</p>
-            <p style="margin-top:8px;font-size:14px;">파이프라인을 실행하면 여기에 표시됩니다.</p>
+        <div class="empty-state">
+            <div class="empty-state-icon">+</div>
+            <p>No content yet</p>
+            <p class="hint">Run the pipeline to get started.</p>
         </div>
         {% endif %}
+
     </div>
+
+    <div class="footer">
+        Blog AI Studio &middot; Auto-refresh every 60s
+    </div>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        const label = document.getElementById('themeLabel');
+        const html = document.documentElement;
+
+        function setTheme(t) {
+            html.setAttribute('data-theme', t);
+            label.textContent = t;
+            localStorage.setItem('theme', t);
+        }
+
+        toggle.addEventListener('click', () => {
+            setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+
+        const saved = localStorage.getItem('theme');
+        if (saved) setTheme(saved);
+    </script>
 </body>
 </html>
