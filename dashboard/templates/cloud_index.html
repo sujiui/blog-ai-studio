@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog AI Studio</title>
     <meta http-equiv="refresh" content="60">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <style>
         /* ─── Theme Variables ─── */
         :root {
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
             --radius: 8px;
             --radius-lg: 12px;
             --transition: 150ms ease;
@@ -268,6 +267,37 @@
             font-weight: 500;
         }
 
+        /* ─── View Tabs ─── */
+        .view-tabs {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2px;
+            margin-bottom: 14px;
+            width: fit-content;
+        }
+        .view-tab {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+        .view-tab:hover { color: var(--text-secondary); }
+        .view-tab.active {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0,0,0,.1);
+        }
+
         /* ─── Kanban ─── */
         .kanban {
             display: grid;
@@ -368,6 +398,83 @@
             min-height: 80px;
             color: var(--text-tertiary);
             font-size: 12px;
+        }
+
+        /* ─── Timeline ─── */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 4px;
+            bottom: 4px;
+            width: 1px;
+            background: var(--border);
+        }
+        .tl-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .tl-item:last-child { padding-bottom: 0; }
+        .tl-node {
+            position: absolute;
+            left: -32px;
+            top: 2px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .tl-node-inner {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        .tl-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            transition: all var(--transition);
+        }
+        .tl-card:hover {
+            border-color: var(--text-tertiary);
+        }
+        .tl-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .tl-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        .tl-stage {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 100px;
+        }
+        .tl-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .tl-date {
+            font-size: 11px;
+            color: var(--text-tertiary);
         }
 
         /* ─── Table ─── */
@@ -473,6 +580,9 @@
             border-top: 1px solid var(--border);
             margin-top: 16px;
         }
+
+        /* ─── View Toggle ─── */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -539,13 +649,17 @@
             {% endfor %}
         </div>
 
-        <!-- Kanban Board -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">Pipeline Board</span>
-                <span class="section-badge">by team</span>
+        <!-- View Tabs -->
+        <div class="section-header" style="margin-bottom:0;">
+            <span class="section-title">Pipeline</span>
+            <div class="view-tabs">
+                <button class="view-tab active" data-view="board">Board</button>
+                <button class="view-tab" data-view="timeline">Timeline</button>
             </div>
+        </div>
 
+        <!-- ═══ Board View ═══ -->
+        <div class="section" id="view-board" style="margin-top:14px;">
             <div class="kanban">
                 {% set board_cols = [
                     ("planning", "기획", "#8B5CF6"),
@@ -593,6 +707,72 @@
                 </div>
                 {% endfor %}
             </div>
+        </div>
+
+        <!-- ═══ Timeline View ═══ -->
+        <div class="section hidden" id="view-timeline" style="margin-top:14px;">
+            {% set stage_map = {
+                "research":  ("리서치",      "#3B82F6"),
+                "planning":  ("기획",        "#8B5CF6"),
+                "writing":   ("라이팅",      "#10B981"),
+                "creative":  ("크리에이티브", "#F59E0B"),
+                "editorial": ("편집",        "#EF4444"),
+                "done":      ("승인",        "#22C55E"),
+                "published": ("발행",        "#6B7280")
+            } %}
+
+            {% if contents %}
+            <div class="timeline">
+                {% for c in contents %}
+                {% set sname, scolor = stage_map.get(c.team_key, ("--", "#666")) %}
+                <div class="tl-item">
+                    <div class="tl-node">
+                        <div class="tl-node-inner" style="background:{{scolor}};"></div>
+                    </div>
+                    <div class="tl-card">
+                        <div class="tl-header">
+                            <span class="tl-title">{{ c.title or c.keyword or c.content_id }}</span>
+                            <span class="tl-stage" style="background:{{scolor}}18;color:{{scolor}};border:1px solid {{scolor}}33;">{{sname}}</span>
+                        </div>
+                        <div class="tl-footer">
+                            {% if c.category_key == 'ai_tech' %}
+                                <span class="tag tag-ai">AI/Tech</span>
+                            {% elif c.category_key == 'health' %}
+                                <span class="tag tag-health">Health</span>
+                            {% elif c.category_key == 'self_improvement' %}
+                                <span class="tag tag-self">Growth</span>
+                            {% else %}
+                                <span class="tag tag-none">--</span>
+                            {% endif %}
+
+                            {% if c.score %}
+                                <span class="score {{ 'sc-high' if c.score >= 80 else 'sc-mid' if c.score >= 60 else 'sc-low' }}">{{ c.score | int }}점</span>
+                            {% endif %}
+
+                            {% if c.pub_scheduled %}
+                                <span class="tl-date">{{ c.pub_scheduled }}</span>
+                            {% endif %}
+
+                            {% if c.pub_actual %}
+                                <span class="tl-date">발행 {{ c.pub_actual }}</span>
+                            {% endif %}
+
+                            {% if c.grade %}
+                                {% set g = c.grade.split(' ')[-1] %}
+                                <span class="grade gr-{{g}}">{{g}}</span>
+                            {% endif %}
+
+                            {% if c.pub_url %}
+                                <a href="{{ c.pub_url }}" target="_blank" class="link">Open</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-col" style="min-height:120px;">No items</div>
+            {% endif %}
         </div>
 
         <!-- Published & Tracking -->
@@ -669,6 +849,7 @@
     </div>
 
     <script>
+        /* Theme Toggle */
         const toggle = document.getElementById('themeToggle');
         const label = document.getElementById('themeLabel');
         const html = document.documentElement;
@@ -685,6 +866,28 @@
 
         const saved = localStorage.getItem('theme');
         if (saved) setTheme(saved);
+
+        /* View Tabs */
+        const tabs = document.querySelectorAll('.view-tab');
+        const views = {
+            board: document.getElementById('view-board'),
+            timeline: document.getElementById('view-timeline')
+        };
+
+        function setView(name) {
+            tabs.forEach(t => t.classList.toggle('active', t.dataset.view === name));
+            Object.entries(views).forEach(([k, v]) => {
+                if (v) v.classList.toggle('hidden', k !== name);
+            });
+            localStorage.setItem('view', name);
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => setView(tab.dataset.view));
+        });
+
+        const savedView = localStorage.getItem('view');
+        if (savedView && views[savedView]) setView(savedView);
     </script>
 </body>
 </html>
