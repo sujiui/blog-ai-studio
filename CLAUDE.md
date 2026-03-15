@@ -122,10 +122,55 @@ Claude CLI `--output-format json` 응답은 `{"result": "..."}` wrapper 안에 m
 
 ## Environment Variables
 
-`.env` 파일에 설정 (`.env.example` 참조):
+`.env` 파일에 설정:
 
 - `WP_URL`, `WP_USERNAME`, `WP_APP_PASSWORD` — WordPress REST API 인증
 - `GEMINI_API_KEY` — 이미지 생성 (google.genai)
+
+## WordPress
+
+**사이트**: node-archive.kr
+
+### 카테고리 ID
+
+| slug | ID | 사이드바 그룹 |
+|------|----|--------------|
+| ai-tools | 50 | ⚡ AI 활용 |
+| ai-concept | 51 | 🧠 AI 지식 |
+| vibe-coding | 52 | 🧠 AI 지식 |
+| ai-usage | 53 | ⚡ AI 활용 |
+| review | 54 | 📝 리뷰·체험 |
+| productivity | 55 | ⚡ AI 활용 |
+| ai-research | 56 | 🧠 AI 지식 |
+| insight | 57 | 💡 인사이트 |
+| essay | 58 | ✍️ 에세이·관심사 |
+
+### publish_post() 주요 파라미터
+
+```python
+from src.publisher import publish_post
+
+publish_post({
+    "title": "...",
+    "content": article_html,       # script 태그 제거 후 전달
+    "excerpt": "메타 설명 (60~110자)",
+    "tags": ["태그1", "태그2"],
+    "category_ids": [57],          # 위 ID 표 참조
+    "thumbnail_path": "path/to/thumbnail.png",
+    "images_dir": "path/to/images/",  # 본문 로컬 이미지 일괄 업로드
+})
+# 반환: {"id": WP_ID, "link": "...", "status": "draft", "uploaded_images": [...]}
+```
+
+글 상태 변경 (draft → publish):
+```python
+import requests
+from requests.auth import HTTPBasicAuth
+from config.settings import WP_URL, WP_USERNAME, WP_APP_PASSWORD
+
+requests.post(f"{WP_URL}/wp-json/wp/v2/posts/{WP_ID}",
+              json={"status": "publish"},
+              auth=HTTPBasicAuth(WP_USERNAME, WP_APP_PASSWORD))
 
 ## Content Strategy
 
