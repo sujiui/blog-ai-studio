@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Node-Archive</title>
+  <link rel="stylesheet" href="card-grid.css" />
+</head>
+<body>
+
+<!-- ===================== 상단 네비바 ===================== -->
+<header class="topbar">
+  <!-- 햄버거 (모바일 전용) -->
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="메뉴 열기">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
+  <!-- 로고 -->
+  <a class="topbar-logo" href="#">🗂️ <span>Node-Archive</span></a>
+
+  <!-- 검색 버튼 -->
+  <button class="search-btn" id="searchOpenBtn" aria-label="검색">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  </button>
+</header>
+
+<!-- ===================== 검색 오버레이 ===================== -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-box">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="글 검색..." autocomplete="off" />
+      <button class="search-close" id="searchCloseBtn">✕</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <p class="search-hint">검색어를 입력하세요</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 사이드바 오버레이 (모바일 백드롭) ===================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===================== 레이아웃 ===================== -->
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">카테고리</div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <button class="sidebar-item active" data-cat="all"><span class="emoji">✨</span> 전체</button>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-item" data-cat="ai-knowledge"><span class="emoji">🧠</span> AI 지식</button>
+      <button class="sidebar-item" data-cat="ai-apply"><span class="emoji">⚡</span> AI 활용</button>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-item" data-cat="insight"><span class="emoji">💡</span> 인사이트</button>
+      <button class="sidebar-item" data-cat="review"><span class="emoji">📝</span> 리뷰·체험</button>
+      <button class="sidebar-item" data-cat="essay"><span class="emoji">✍️</span> 에세이·관심사</button>
+    </nav>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main">
+    <div class="main-header">
+      <h2><span class="header-emoji" id="headerEmoji">✨</span> <span id="headerTitle">전체 글</span></h2>
+      <p id="headerDesc">모든 글 모아보기</p>
+    </div>
+
+    <div id="gridStatus" class="grid-status">
+      <div class="spinner"></div>
+      <p>글을 불러오는 중...</p>
+    </div>
+
+    <div class="kb-blog-grid" id="blogGrid" style="display:none;"></div>
+
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+      <button class="load-more-btn" id="loadMoreBtn">더 보기</button>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// =============================================
+// 설정
+// =============================================
+const WP_URL   = "https://node-archive.kr";
+const PER_PAGE = 9;
+
+const CAT_META = {
+  "all":          { label: "전체 글",       desc: "모든 글 모아보기",                      emoji: "✨", slugs: [] },
+  "ai-knowledge": { label: "AI 지식",       desc: "AI 개념·바이브코딩·연구까지",           emoji: "🧠", slugs: ["ai-concept","vibe-coding","ai-research"] },
+  "ai-apply":     { label: "AI 활용",       desc: "AI 도구·활용법·생산성 워크플로우",      emoji: "⚡", slugs: ["ai-tools","ai-usage","productivity"] },
+  "insight":      { label: "인사이트",      desc: "AI 시대의 생각과 관점",                 emoji: "💡", slugs: ["insight"] },
+  "review":       { label: "리뷰·체험",     desc: "직접 써보고 느낀 솔직한 후기",          emoji: "📝", slugs: ["review"] },
+  "essay":        { label: "에세이·관심사", desc: "일상, 트렌드, 그냥 하고 싶은 이야기",   emoji: "✍️", slugs: ["essay"] },
+};
+
+// =============================================
+// 상태
+// =============================================
+let currentPage = 1;
+let totalPages  = 1;
+let activeSlug  = "all";
+let wpCatMap    = new Map();
+let searchTimer = null;
+
+// =============================================
+// 햄버거 메뉴
+// =============================================
+const hamburgerBtn   = document.getElementById("hamburgerBtn");
+const sidebar        = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+function openSidebar() {
+  sidebar.classList.add("open");
+  sidebarOverlay.classList.add("open");
+  hamburgerBtn.classList.add("open");
+  hamburgerBtn.setAttribute("aria-label", "메뉴 닫기");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("open");
+  hamburgerBtn.classList.remove("open");
+  hamburgerBtn.setAttribute("aria-label", "메뉴 열기");
+  document.body.style.overflow = "";
+}
+
+hamburgerBtn.addEventListener("click", () =>
+  sidebar.classList.contains("open") ? closeSidebar() : openSidebar()
+);
+sidebarOverlay.addEventListener("click", closeSidebar);
+
+// =============================================
+// 검색 오버레이
+// =============================================
+const searchOverlay  = document.getElementById("searchOverlay");
+const searchInput    = document.getElementById("searchInput");
+const searchResults  = document.getElementById("searchResults");
+
+document.getElementById("searchOpenBtn").addEventListener("click", () => {
+  searchOverlay.classList.add("open");
+  setTimeout(() => searchInput.focus(), 50);
+});
+
+document.getElementById("searchCloseBtn").addEventListener("click", closeSearch);
+searchOverlay.addEventListener("click", e => { if (e.target === searchOverlay) closeSearch(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSearch(); });
+
+function closeSearch() {
+  searchOverlay.classList.remove("open");
+  searchInput.value = "";
+  searchResults.innerHTML = '<p class="search-hint">검색어를 입력하세요</p>';
+}
+
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  const q = searchInput.value.trim();
+  if (!q) {
+    searchResults.innerHTML = '<p class="search-hint">검색어를 입력하세요</p>';
+    return;
+  }
+  searchResults.innerHTML = '<p class="search-hint">검색 중...</p>';
+  searchTimer = setTimeout(() => doSearch(q), 350);
+});
+
+async function doSearch(q) {
+  try {
+    const res   = await fetch(`${WP_URL}/wp-json/wp/v2/posts?search=${encodeURIComponent(q)}&per_page=7&_embed&status=publish`);
+    const posts = await res.json();
+
+    if (!posts.length) {
+      searchResults.innerHTML = '<p class="search-hint">검색 결과가 없습니다</p>';
+      return;
+    }
+
+    searchResults.innerHTML = posts.map(post => {
+      const thumb = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+      const d     = new Date(post.date);
+      const date  = `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;
+      const cat   = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "";
+
+      return `
+        <a class="search-result-item" href="${post.link}" target="_blank" rel="noopener">
+          ${thumb
+            ? `<img class="search-result-thumb" src="${thumb}" alt="" />`
+            : `<div class="search-result-thumb-placeholder">🤖</div>`}
+          <div class="search-result-text">
+            <div class="search-result-title">${post.title.rendered}</div>
+            <div class="search-result-meta">${cat ? cat + " · " : ""}${date}</div>
+          </div>
+        </a>`;
+    }).join("");
+  } catch (err) {
+    searchResults.innerHTML = `<p class="search-hint" style="color:#e05;">검색 오류: ${err.message}</p>`;
+  }
+}
+
+// =============================================
+// WordPress 카테고리 로드
+// =============================================
+async function loadWpCategories() {
+  try {
+    const res  = await fetch(`${WP_URL}/wp-json/wp/v2/categories?per_page=50`);
+    const data = await res.json();
+    data.forEach(cat => wpCatMap.set(cat.slug, cat.id));
+  } catch (e) { console.warn("카테고리 로드 실패:", e); }
+}
+
+// =============================================
+// 글 목록 로드
+// =============================================
+async function loadPosts(page = 1, append = false) {
+  const status = document.getElementById("gridStatus");
+  const grid   = document.getElementById("blogGrid");
+
+  if (!append) {
+    grid.style.display   = "none";
+    status.style.display = "block";
+    status.innerHTML     = '<div class="spinner"></div><p>글을 불러오는 중...</p>';
+  }
+
+  try {
+    let url = `${WP_URL}/wp-json/wp/v2/posts?per_page=${PER_PAGE}&page=${page}&_embed&status=publish`;
+    if (activeSlug !== "all") {
+      const slugs = CAT_META[activeSlug]?.slugs || [];
+      const ids = slugs.map(s => wpCatMap.get(s)).filter(Boolean);
+      if (ids.length) url += `&categories=${ids.join(",")}`;
+    }
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    totalPages = parseInt(res.headers.get("X-WP-TotalPages") || "1");
+    const posts = await res.json();
+
+    renderCards(posts, append);
+    status.style.display = "none";
+    grid.style.display   = "grid";
+
+    const wrap = document.getElementById("loadMoreWrap");
+    const btn  = document.getElementById("loadMoreBtn");
+    if (currentPage < totalPages) {
+      wrap.style.display = "block";
+      btn.disabled       = false;
+      btn.textContent    = "더 보기";
+    } else {
+      wrap.style.display = "none";
+    }
+  } catch (err) {
+    status.innerHTML     = `<p style="color:#7c3aed;">글을 불러오지 못했습니다.<br><small style="color:#aaa;">${err.message}</small></p>`;
+    status.style.display = "block";
+  }
+}
+
+// =============================================
+// 카드 렌더링
+// =============================================
+function renderCards(posts, append = false) {
+  const grid = document.getElementById("blogGrid");
+  if (!append) grid.innerHTML = "";
+
+  if (!posts.length && !append) {
+    grid.style.display = "none";
+    const s = document.getElementById("gridStatus");
+    s.innerHTML      = '<p>이 카테고리에 아직 글이 없습니다.</p>';
+    s.style.display  = "block";
+    return;
+  }
+
+  posts.forEach(post => {
+    const card    = document.createElement("a");
+    card.className = "kb-card";
+    card.href      = post.link;
+    card.target    = "_blank";
+    card.rel       = "noopener noreferrer";
+
+    const thumbUrl  = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || null;
+    const thumbHtml = thumbUrl
+      ? `<img class="kb-card-thumb" src="${thumbUrl}" alt="${esc(post.title.rendered)}" loading="lazy" />`
+      : `<div class="kb-card-thumb-placeholder">🤖</div>`;
+
+    const d       = new Date(post.date);
+    const dateStr = `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;
+    const cats    = post._embedded?.["wp:term"]?.[0] || [];
+    const tags    = cats.slice(0, 2).map(c => `<span class="kb-tag">${esc(c.name)}</span>`).join("");
+    const excerpt = strip(post.excerpt?.rendered || "");
+    const author  = post._embedded?.author?.[0]?.name || "";
+
+    card.innerHTML = `
+      <div class="kb-card-thumb-wrap">${thumbHtml}</div>
+      <div class="kb-card-body">
+        <div class="kb-card-meta-top">
+          ${author ? `<span>${esc(author)}</span><span class="dot"></span>` : ""}
+          <span>${dateStr}</span>
+        </div>
+        <h3 class="kb-card-title">${post.title.rendered}</h3>
+        <p class="kb-card-excerpt">${esc(excerpt)}</p>
+        <div class="kb-card-tags">${tags}</div>
+      </div>`;
+
+    grid.appendChild(card);
+  });
+}
+
+// =============================================
+// 사이드바 카테고리 클릭
+// =============================================
+document.getElementById("sidebarNav").addEventListener("click", e => {
+  const btn = e.target.closest(".sidebar-item");
+  if (!btn) return;
+
+  activeSlug  = btn.dataset.cat;
+  currentPage = 1;
+
+  document.querySelectorAll(".sidebar-item").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  const meta = CAT_META[activeSlug] || { label: activeSlug, desc: "", emoji: "📂" };
+  document.getElementById("headerEmoji").textContent = meta.emoji;
+  document.getElementById("headerTitle").textContent  = meta.label;
+  document.getElementById("headerDesc").textContent   = meta.desc;
+
+  closeSidebar(); // 모바일에서 선택 후 자동으로 닫기
+  loadPosts(1, false);
+});
+
+// =============================================
+// 더보기
+// =============================================
+document.getElementById("loadMoreBtn").addEventListener("click", function () {
+  this.disabled    = true;
+  this.textContent = "불러오는 중...";
+  currentPage++;
+  loadPosts(currentPage, true);
+});
+
+// =============================================
+// 유틸
+// =============================================
+function esc(str) {
+  return (str || "").replace(/&amp;/g,"&").replace(/&lt;/g,"<")
+    .replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#039;/g,"'");
+}
+function strip(html) {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  return d.textContent || d.innerText || "";
+}
+function pad(n) { return String(n).padStart(2, "0"); }
+
+// =============================================
+// 초기화
+// =============================================
+(async () => {
+  await loadWpCategories();
+  await loadPosts(1);
+})();
+</script>
+
+</body>
+</html>

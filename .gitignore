@@ -5,3 +5,4 @@ logs/
 .venv/
 output/
 .omc/
+.DS_Store

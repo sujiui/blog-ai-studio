@@ -213,8 +213,11 @@ def _fetch_wp_stats(post: dict) -> dict:
         )
         comment_count = len(comments_res.json()) if comments_res.ok else 0
 
+        # Jetpack 조회수: jetpack_views 필드 (Jetpack 플러그인 필요)
+        views = post_data.get("jetpack_views", 0)
+
         return {
-            "views": post_data.get("jetpack_featured_media_url", 0),  # Jetpack 조회수 (있을 경우)
+            "views": views,
             "comments": comment_count,
         }
     except Exception as e:

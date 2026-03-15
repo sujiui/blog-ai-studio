@@ -1,0 +1,495 @@
+<!-- ========================================
+  Node-Archive Blog Widget
+  WordPress 사용자 정의 HTML 블록에 붙여넣기
+  ======================================== -->
+
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* ── 전체 페이지 배경 (WordPress 테마 배경 덮어쓰기) ── */
+html, body,
+.site, .site-content, .wp-site-blocks,
+.entry-content, .post-content,
+.elementor-section-wrap, .elementor-widget-wrap {
+  background-color: #f8f7fc !important;
+}
+
+/* ── 위젯 리셋 ── */
+#na-widget * { box-sizing: border-box; }
+
+#na-widget {
+  --na-accent: #7c3aed;
+  --na-accent-light: #ede9fe;
+  --na-text: #111;
+  --na-muted: #999;
+  --na-border: #ececec;
+  --na-bg: #f8f7fc;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--na-text);
+  background: var(--na-bg);
+  min-height: 100vh;
+  padding-bottom: 0;
+  /* ── WordPress 콘텐츠 박스 탈출 (full-bleed) ── */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow-x: hidden;
+}
+
+/* ── 상단 바 ── */
+#na-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--na-border);
+  position: sticky; top: 0; z-index: 10;
+}
+#na-logo {
+  font-size: 17px; font-weight: 800; color: var(--na-accent);
+  flex: 1; text-decoration: none; display: flex; align-items: center; gap: 6px;
+}
+#na-logo span { color: var(--na-text); }
+
+/* 햄버거 */
+#na-hamburger {
+  display: none; flex-direction: column; justify-content: center;
+  gap: 5px; width: 34px; height: 34px;
+  background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px;
+}
+#na-hamburger:hover { background: var(--na-accent-light); }
+#na-hamburger .na-bar {
+  width: 100%; height: 2px; background: var(--na-text);
+  border-radius: 2px; transition: all 0.25s ease; transform-origin: center;
+}
+#na-hamburger.open .na-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#na-hamburger.open .na-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
+#na-hamburger.open .na-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* 검색 버튼 */
+#na-search-btn {
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; border-radius: 8px;
+  color: var(--na-muted); transition: all 0.15s;
+}
+#na-search-btn:hover { background: var(--na-accent-light); color: var(--na-accent); }
+#na-search-btn svg { width: 17px; height: 17px; }
+
+/* ── 검색 오버레이 ── */
+#na-search-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  align-items: flex-start; justify-content: center; padding-top: 80px;
+}
+#na-search-overlay.open { display: flex; }
+#na-search-box {
+  background: #fff; border-radius: 16px; width: 90%; max-width: 560px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden;
+}
+#na-search-input-wrap {
+  display: flex; align-items: center;
+  padding: 0 16px; border-bottom: 1px solid var(--na-border);
+}
+#na-search-input-wrap svg { color: var(--na-muted); width: 17px; height: 17px; flex-shrink: 0; }
+#na-search-input {
+  flex: 1; border: none; outline: none;
+  font-family: 'Pretendard', sans-serif; font-size: 16px;
+  padding: 17px 12px; color: var(--na-text); background: transparent;
+}
+#na-search-input::placeholder { color: var(--na-muted); }
+#na-search-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--na-muted); padding: 4px 6px; border-radius: 6px; line-height: 1;
+}
+#na-search-close:hover { color: var(--na-text); }
+#na-search-results { max-height: 400px; overflow-y: auto; padding: 6px 0; }
+.na-result-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 20px; text-decoration: none; color: inherit; transition: background 0.12s;
+}
+.na-result-item:hover { background: var(--na-accent-light); }
+.na-result-thumb { width: 50px; height: 34px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.na-result-thumb-ph {
+  width: 50px; height: 34px; border-radius: 6px;
+  background: var(--na-accent-light); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.na-result-title { font-size: 13.5px; font-weight: 600; color: var(--na-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.na-result-meta { font-size: 11.5px; color: var(--na-muted); margin-top: 2px; }
+#na-search-hint { padding: 20px; text-align: center; font-size: 13px; color: var(--na-muted); }
+
+/* ── 본문 레이아웃 ── */
+#na-body {
+  display: flex; gap: 24px;
+  padding: 28px 20px 0; align-items: flex-start;
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* ── 사이드바 오버레이 ── */
+#na-sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 90;
+}
+#na-sidebar-overlay.open { display: block; }
+
+/* ── 사이드바 ── */
+#na-sidebar { width: 200px; flex-shrink: 0; position: sticky; top: 60px; }
+.na-sidebar-label {
+  font-size: 11px; font-weight: 700; color: var(--na-muted);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 10px; padding: 0 4px;
+}
+#na-sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+.na-cat-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 13px; border-radius: 10px;
+  cursor: pointer; font-size: 16px; font-weight: 500;
+  color: #555; transition: all 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+  font-family: 'Pretendard', sans-serif; margin: 0; line-height: 1.4;
+}
+.na-cat-btn:hover { background: var(--na-accent-light); color: var(--na-accent); }
+.na-cat-btn.active { background: var(--na-accent-light); color: var(--na-accent); font-weight: 700; }
+.na-cat-btn .na-emoji { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+.na-divider { height: 1px; background: var(--na-border); margin: 6px 4px; }
+
+/* ── 메인 ── */
+#na-main { flex: 1; min-width: 0; }
+#na-main-header { margin-bottom: 22px; }
+#na-main-header h2 {
+  font-size: 24px; font-weight: 800; color: var(--na-text);
+  display: flex; align-items: center; gap: 8px; margin: 0;
+}
+#na-main-header p { margin: 5px 0 0; font-size: 15px; color: var(--na-muted); }
+
+/* ── 카드 그리드 ── */
+#na-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+/* ── 카드 ── */
+.na-card {
+  background: #fff; border-radius: 13px; overflow: hidden;
+  border: 1px solid var(--na-border);
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex; flex-direction: column;
+  text-decoration: none !important; color: inherit;
+}
+.na-card:hover { box-shadow: 0 8px 28px rgba(124,58,237,0.10); transform: translateY(-3px); }
+.na-thumb-wrap { width: 100%; aspect-ratio: 16/9; background: #f0edf8; overflow: hidden; }
+.na-thumb { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.na-card:hover .na-thumb { transform: scale(1.04); }
+.na-thumb-ph {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe); font-size: 32px;
+}
+.na-card-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+.na-meta-top { font-size: 12px; color: var(--na-muted); margin: 0 0 10px; display: flex; align-items: center; gap: 5px; }
+.na-meta-top .na-dot { width: 2px; height: 2px; background: #ccc; border-radius: 50%; flex-shrink: 0; }
+.na-card-title {
+  font-size: 17px; font-weight: 700; color: var(--na-text); line-height: 1.55;
+  margin: 0 0 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.na-card-excerpt {
+  font-size: 14px; color: var(--na-muted); line-height: 1.65; flex: 1; margin: 0 0 14px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.na-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.na-tag { font-size: 12.5px; font-weight: 600; color: var(--na-accent); cursor: pointer; }
+.na-tag:hover { text-decoration: underline; }
+
+/* ── 로딩 ── */
+#na-status { padding: 50px 0; text-align: center; color: var(--na-muted); font-size: 13px; }
+.na-spinner {
+  width: 30px; height: 30px; border: 3px solid #ede9fe;
+  border-top-color: var(--na-accent); border-radius: 50%;
+  animation: na-spin 0.7s linear infinite; margin: 0 auto 10px;
+}
+@keyframes na-spin { to { transform: rotate(360deg); } }
+
+/* ── 번호 페이지네이션 ── */
+#na-pagination {
+  display: none; margin-top: 40px;
+  justify-content: center; align-items: center; gap: 6px;
+  flex-wrap: wrap;
+}
+.na-page-btn {
+  min-width: 36px; height: 36px; padding: 0 10px;
+  border-radius: 8px; border: 1.5px solid var(--na-border);
+  background: #fff; font-family: 'Pretendard', sans-serif;
+  font-size: 13.5px; font-weight: 600; color: #555;
+  cursor: pointer; transition: all 0.15s; display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.na-page-btn:hover { border-color: var(--na-accent); color: var(--na-accent); background: var(--na-accent-light); }
+.na-page-btn.active { background: var(--na-accent); border-color: var(--na-accent); color: #fff; }
+.na-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.na-page-arrow { font-size: 15px; }
+
+/* ── 푸터 ── */
+#na-footer {
+  margin-top: 60px;
+  background: #1a1a2e;
+  padding: 28px 24px;
+  text-align: center;
+}
+#na-footer-copy { font-size: 13px; color: #8a8aaa; margin: 0; }
+
+/* ── 반응형 ── */
+@media (max-width: 1080px) {
+  #na-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  #na-hamburger { display: flex; }
+  #na-body { padding: 20px 16px 0; gap: 0; }
+  #na-sidebar {
+    position: fixed; top: 0; left: 0; height: 100%;
+    width: 250px; background: #fff; z-index: 95;
+    padding: 68px 14px 28px; overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.10);
+  }
+  #na-sidebar.open { transform: translateX(0); }
+  #na-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  #na-grid { grid-template-columns: 1fr; }
+  #na-topbar { padding: 12px 16px; }
+  #na-main-header h2 { font-size: 19px; }
+}
+</style>
+
+<!-- ── 위젯 HTML ── -->
+<div id="na-widget">
+
+  <!-- 상단 바 -->
+  <div id="na-topbar">
+    <button id="na-hamburger" aria-label="메뉴">
+      <span class="na-bar"></span><span class="na-bar"></span><span class="na-bar"></span>
+    </button>
+    <a id="na-logo" href="#">🗂️ <span>Node-Archive</span></a>
+    <button id="na-search-btn" aria-label="검색">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- 본문 -->
+  <div id="na-body">
+    <div id="na-sidebar-overlay"></div>
+
+    <!-- 사이드바 -->
+    <aside id="na-sidebar">
+      <div class="na-sidebar-label">카테고리</div>
+      <nav id="na-sidebar-nav">
+        <button class="na-cat-btn active" data-cat="all"><span class="na-emoji">✨</span> 전체</button>
+        <div class="na-divider"></div>
+        <button class="na-cat-btn" data-cat="ai-knowledge"><span class="na-emoji">🧠</span> AI 지식</button>
+        <button class="na-cat-btn" data-cat="ai-apply"><span class="na-emoji">⚡</span> AI 활용</button>
+        <div class="na-divider"></div>
+        <button class="na-cat-btn" data-cat="insight"><span class="na-emoji">💡</span> 인사이트</button>
+        <button class="na-cat-btn" data-cat="review"><span class="na-emoji">📝</span> 리뷰·체험</button>
+        <button class="na-cat-btn" data-cat="essay"><span class="na-emoji">✍️</span> 에세이·관심사</button>
+      </nav>
+    </aside>
+
+    <!-- 메인 -->
+    <main id="na-main">
+      <div id="na-main-header">
+        <h2><span id="na-h-emoji">✨</span> <span id="na-h-title">전체 글</span></h2>
+        <p id="na-h-desc">Node-Archive의 모든 글</p>
+      </div>
+      <div id="na-status"><div class="na-spinner"></div><p>글을 불러오는 중...</p></div>
+      <div id="na-grid" style="display:none;"></div>
+      <div id="na-pagination"></div>
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer id="na-footer">
+    <p id="na-footer-copy">© 2026 Node-Archive. All rights reserved.</p>
+  </footer>
+</div>
+
+<!-- 검색 오버레이 -->
+<div id="na-search-overlay">
+  <div id="na-search-box">
+    <div id="na-search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="na-search-input" type="text" placeholder="글 검색..." autocomplete="off" />
+      <button id="na-search-close">✕</button>
+    </div>
+    <div id="na-search-results"><p id="na-search-hint">검색어를 입력하세요</p></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const WP  = "https://node-archive.kr";
+  const PPG = 27; // 페이지당 카드 수
+  const CATS = {
+    "all":          { label:"전체 글",       desc:"모든 글 모아보기",                     emoji:"✨", slugs:[] },
+    "ai-knowledge": { label:"AI 지식",       desc:"AI 개념·바이브코딩·연구까지",          emoji:"🧠", slugs:["ai-concept","vibe-coding","ai-research"] },
+    "ai-apply":     { label:"AI 활용",       desc:"AI 도구·활용법·생산성 워크플로우",     emoji:"⚡", slugs:["ai-tools","ai-usage","productivity"] },
+    "insight":      { label:"인사이트",      desc:"AI 시대의 생각과 관점",                emoji:"💡", slugs:["insight"] },
+    "review":       { label:"리뷰·체험",     desc:"직접 써보고 느낀 솔직한 후기",         emoji:"📝", slugs:["review"] },
+    "essay":        { label:"에세이·관심사", desc:"일상, 트렌드, 그냥 하고 싶은 이야기",  emoji:"✍️", slugs:["essay"] },
+  };
+
+  let page = 1, total = 1, slug = "all", catMap = new Map(), stimer = null;
+  const $ = id => document.getElementById(id);
+  const ham = $("na-hamburger"), sb = $("na-sidebar"), sbo = $("na-sidebar-overlay");
+
+  // ── 햄버거 ──
+  function openSB()  { sb.classList.add("open"); sbo.classList.add("open"); ham.classList.add("open"); document.body.style.overflow="hidden"; }
+  function closeSB() { sb.classList.remove("open"); sbo.classList.remove("open"); ham.classList.remove("open"); document.body.style.overflow=""; }
+  ham.addEventListener("click", () => sb.classList.contains("open") ? closeSB() : openSB());
+  sbo.addEventListener("click", closeSB);
+
+  // ── 검색 ──
+  const ov=$("na-search-overlay"), si=$("na-search-input"), sr=$("na-search-results");
+  $("na-search-btn").addEventListener("click", () => { ov.classList.add("open"); setTimeout(()=>si.focus(),50); });
+  $("na-search-close").addEventListener("click", closeSearch);
+  ov.addEventListener("click", e => { if(e.target===ov) closeSearch(); });
+  document.addEventListener("keydown", e => { if(e.key==="Escape") closeSearch(); });
+  function closeSearch() { ov.classList.remove("open"); si.value=""; sr.innerHTML='<p id="na-search-hint">검색어를 입력하세요</p>'; }
+  si.addEventListener("input", () => {
+    clearTimeout(stimer);
+    const q = si.value.trim();
+    if(!q){ sr.innerHTML='<p id="na-search-hint">검색어를 입력하세요</p>'; return; }
+    sr.innerHTML='<p id="na-search-hint">검색 중...</p>';
+    stimer = setTimeout(()=>doSearch(q), 350);
+  });
+  async function doSearch(q) {
+    try {
+      const posts = await (await fetch(`${WP}/wp-json/wp/v2/posts?search=${encodeURIComponent(q)}&per_page=7&_embed&status=publish`)).json();
+      if(!posts.length){ sr.innerHTML='<p id="na-search-hint">검색 결과가 없습니다</p>'; return; }
+      sr.innerHTML = posts.map(p => {
+        const t=p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+        const c=p._embedded?.["wp:term"]?.[0]?.[0]?.name||"";
+        return `<a class="na-result-item" href="${p.link}" target="_blank" rel="noopener">
+          ${t?`<img class="na-result-thumb" src="${t}" alt=""/>`:`<div class="na-result-thumb-ph">🤖</div>`}
+          <div><div class="na-result-title">${p.title.rendered}</div>
+          <div class="na-result-meta">${c?c+" · ":""}${fmtDate(p.date)}</div></div></a>`;
+      }).join("");
+    } catch(e){ sr.innerHTML=`<p id="na-search-hint">오류: ${e.message}</p>`; }
+  }
+
+  // ── 카테고리 로드 ──
+  async function loadCats() {
+    try { (await (await fetch(`${WP}/wp-json/wp/v2/categories?per_page=50`)).json()).forEach(c=>catMap.set(c.slug,c.id)); } catch(e){}
+  }
+
+  // ── 글 로드 ──
+  async function loadPosts(p=1) {
+    const st=$("na-status"), gr=$("na-grid"), pg=$("na-pagination");
+    gr.style.display="none"; pg.style.display="none";
+    st.style.display="block"; st.innerHTML='<div class="na-spinner"></div><p>글을 불러오는 중...</p>';
+    try {
+      let url=`${WP}/wp-json/wp/v2/posts?per_page=${PPG}&page=${p}&_embed&status=publish`;
+      if(slug!=="all"){ const ids=(CATS[slug]?.slugs||[]).map(s=>catMap.get(s)).filter(Boolean); if(ids.length) url+=`&categories=${ids.join(",")}`; }
+      const r=await fetch(url);
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      total=parseInt(r.headers.get("X-WP-TotalPages")||"1");
+      renderCards(await r.json());
+      st.style.display="none"; gr.style.display="grid";
+      if(total>1){ renderPagination(); pg.style.display="flex"; }
+    } catch(e){
+      st.innerHTML=`<p style="color:#7c3aed">글을 불러오지 못했습니다<br><small style="color:#aaa">${e.message}</small></p>`;
+      st.style.display="block";
+    }
+  }
+
+  // ── 카드 렌더 ──
+  function renderCards(posts) {
+    const gr=$("na-grid"); gr.innerHTML="";
+    if(!posts.length){
+      gr.style.display="none";
+      const st=$("na-status"); st.innerHTML="<p>이 카테고리에 아직 글이 없습니다</p>"; st.style.display="block";
+      return;
+    }
+    posts.forEach(p => {
+      const a=document.createElement("a");
+      a.className="na-card"; a.href=p.link; a.target="_blank"; a.rel="noopener noreferrer";
+      const th=p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+      const cs=p._embedded?.["wp:term"]?.[0]||[];
+      const auth=p._embedded?.author?.[0]?.name||"";
+      a.innerHTML=`
+        <div class="na-thumb-wrap">${th?`<img class="na-thumb" src="${th}" alt="${esc(p.title.rendered)}" loading="lazy"/>`:`<div class="na-thumb-ph">🤖</div>`}</div>
+        <div class="na-card-body">
+          <div class="na-meta-top">${auth?`<span>${esc(auth)}</span><span class="na-dot"></span>`:""}<span>${fmtDate(p.date)}</span></div>
+          <h3 class="na-card-title">${p.title.rendered}</h3>
+          <p class="na-card-excerpt">${esc(strip(p.excerpt?.rendered||""))}</p>
+          <div class="na-tags">${cs.slice(0,2).map(c=>`<span class="na-tag">${esc(c.name)}</span>`).join("")}</div>
+        </div>`;
+      gr.appendChild(a);
+    });
+  }
+
+  // ── 번호 페이지네이션 렌더 ──
+  function renderPagination() {
+    const pg=$("na-pagination"); pg.innerHTML="";
+    const WINDOW = 5; // 한 번에 보여줄 페이지 번호 수
+
+    // 이전 버튼
+    const prev=makePgBtn("‹", page===1, ()=>{ page--; loadPosts(page); scrollToTop(); });
+    prev.classList.add("na-page-arrow"); pg.appendChild(prev);
+
+    // 페이지 번호 범위 계산
+    let start = Math.max(1, page - Math.floor(WINDOW/2));
+    let end   = Math.min(total, start + WINDOW - 1);
+    if(end - start < WINDOW - 1) start = Math.max(1, end - WINDOW + 1);
+
+    if(start > 1){ pg.appendChild(makePgBtn("1", false, ()=>{ page=1; loadPosts(1); scrollToTop(); })); if(start>2) pg.appendChild(makeEllipsis()); }
+    for(let i=start; i<=end; i++){
+      const n=i;
+      const btn=makePgBtn(String(n), false, ()=>{ page=n; loadPosts(n); scrollToTop(); });
+      if(n===page) btn.classList.add("active");
+      pg.appendChild(btn);
+    }
+    if(end < total){ if(end<total-1) pg.appendChild(makeEllipsis()); pg.appendChild(makePgBtn(String(total), false, ()=>{ page=total; loadPosts(total); scrollToTop(); })); }
+
+    // 다음 버튼
+    const next=makePgBtn("›", page===total, ()=>{ page++; loadPosts(page); scrollToTop(); });
+    next.classList.add("na-page-arrow"); pg.appendChild(next);
+  }
+
+  function makePgBtn(label, disabled, onClick){
+    const b=document.createElement("button"); b.className="na-page-btn";
+    b.textContent=label; b.disabled=disabled;
+    if(!disabled) b.addEventListener("click", onClick);
+    return b;
+  }
+  function makeEllipsis(){
+    const s=document.createElement("span");
+    s.textContent="···"; s.style.cssText="color:#bbb;font-size:13px;padding:0 4px;";
+    return s;
+  }
+  function scrollToTop(){ $("na-widget").scrollIntoView({behavior:"smooth", block:"start"}); }
+
+  // ── 사이드바 클릭 ──
+  $("na-sidebar-nav").addEventListener("click", e => {
+    const btn=e.target.closest(".na-cat-btn"); if(!btn) return;
+    slug=btn.dataset.cat; page=1;
+    document.querySelectorAll(".na-cat-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const m=CATS[slug]||{label:slug,desc:"",emoji:"📂"};
+    $("na-h-emoji").textContent=m.emoji;
+    $("na-h-title").textContent=m.label;
+    $("na-h-desc").textContent=m.desc;
+    closeSB(); loadPosts(1);
+  });
+
+  // ── 유틸 ──
+  function esc(s){ return (s||"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#039;/g,"'"); }
+  function strip(h){ const d=document.createElement("div"); d.innerHTML=h; return d.textContent||d.innerText||""; }
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function fmtDate(s){ const d=new Date(s); return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`; }
+
+  // ── 초기화 ──
+  (async()=>{ await loadCats(); await loadPosts(1); })();
+})();
+</script>
