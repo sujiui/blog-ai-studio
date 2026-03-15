@@ -27,7 +27,6 @@ python -m src.tracker status [content_id]                      # 현황 확인
 .claude/skills/blog/SKILL.md            → /blog 스킬 오케스트레이터 (8단계 워크플로우)
 .claude/agents/blog-researcher.md       → 리서치 에이전트 (트렌드 수집 + 기획서 생성)
 .claude/agents/blog-writer.md           → 작성 에이전트 (글 작성 + 이미지 + 검수 + 발행)
-.claude/commands/blog-quick.md          → 비대화형 크론 커맨드 (자동 실행용)
 .claude/skills/blog/references/         → 스타일 프리셋·이미지 전략 참조 문서
 
 # 핵심 모듈 (스킬/에이전트가 직접 호출)
