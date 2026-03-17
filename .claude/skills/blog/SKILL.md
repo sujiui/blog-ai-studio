@@ -160,14 +160,15 @@ blog-writer Agent가 품질 검수를 수행하고 최종 출력한다.
 
 | 항목 | 배점 | 기준 |
 |------|------|------|
-| Focus Keyword — 제목 앞 50%에 위치 + Power Word + 숫자 | 2 | seo-rules.md §2 |
+| Focus Keyword — 제목 앞 50%에 위치 + Power Word + 감성 언어(Sentiment) | 2 | seo-rules.md §2 |
 | 콘텐츠 2,500단어(영문) 이상 → 한국어 5,000~7,000자 | 3 | seo-rules.md §3 |
-| 첫 문단 + H2 3개 이상에 Focus Keyword 포함, 밀도 1~1.5% | 2 | seo-rules.md §4 |
-| 모든 이미지 alt에 Focus Keyword 포함, 이미지 4장 이상 | 2 | seo-rules.md §5~6 |
-| 내부 링크 3개 이상 | 2 | seo-rules.md §8 |
-| 외부 dofollow 링크 2개 이상 (Nature/WHO 등 권위 출처) | 2 | seo-rules.md §9 |
-| 메타 설명 60~110자, Focus Keyword 포함 | 1 | seo-rules.md §12 |
-| 태그 5~10개 | 1 | seo-rules.md §13 |
+| 첫 문단(앞 10% 또는 첫 300단어) + H2 3개 이상에 Focus Keyword 포함, 밀도 1~1.5% | 2 | seo-rules.md §4 |
+| 이미지 4장 이상, 최소 1장 alt에 Focus Keyword 포함 (전체 권장) | 2 | seo-rules.md §5~6 |
+| 목차(ToC) 포함 (긴 글 필수) | 1 | seo-rules.md §8 |
+| 내부 링크 3개 이상 | 1 | seo-rules.md §9 |
+| 외부 dofollow 링크 2개 이상 (최소 1개 dofollow, Nature/WHO 등 권위 출처) | 2 | seo-rules.md §10 |
+| 메타 설명 80~130자, Focus Keyword 포함 | 1 | seo-rules.md §13 |
+| 태그 5~10개 | 1 | seo-rules.md §14 |
 
 3. **80점 이상**: 승인 → WordPress 발행 → 최종 출력
 4. **80점 미만**: 피드백과 함께 자동 수정 → 재검수 (최대 3회)

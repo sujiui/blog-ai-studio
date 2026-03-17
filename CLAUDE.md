@@ -72,8 +72,8 @@ Step 3: 트렌드 수집 + 리서치 (blog-researcher Agent)
   → SEO 보강 리서치: 연관 검색어 조사 → 추가 섹션 제안
 Step 4: 기획서 생성 (사용자 확인 체크포인트)
 Step 5: 글 작성 (blog-writer Agent)
-Step 6: 이미지 생성 (Gemini → Wikimedia Commons 폴백) + 시각적 관련성 검수
-Step 7: 편집 검수 + SEO (구글 8점 + 네이버 7점, 80점 이상 승인)
+Step 6: 이미지 생성 (Gemini → Unsplash CDN 폴백) + 시각적 관련성 검수
+Step 7: 편집 검수 + SEO (RankMath 100점 기준, 80점 이상 승인)
 Step 8: WordPress 발행 (이미지 미디어 업로드 + draft 모드)
 ```
 
@@ -152,7 +152,7 @@ from src.publisher import publish_post
 publish_post({
     "title": "...",
     "content": article_html,       # script 태그 제거 후 전달
-    "excerpt": "메타 설명 (60~110자)",
+    "excerpt": "메타 설명 (80~130자, Focus Keyword 포함)",
     "tags": ["태그1", "태그2"],
     "category_ids": [57],          # 위 ID 표 참조
     "thumbnail_path": "path/to/thumbnail.png",
@@ -170,6 +170,7 @@ from config.settings import WP_URL, WP_USERNAME, WP_APP_PASSWORD
 requests.post(f"{WP_URL}/wp-json/wp/v2/posts/{WP_ID}",
               json={"status": "publish"},
               auth=HTTPBasicAuth(WP_USERNAME, WP_APP_PASSWORD))
+```
 
 ## Content Strategy
 
