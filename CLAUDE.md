@@ -106,6 +106,24 @@ Claude CLI `--output-format json` 응답은 `{"result": "..."}` wrapper 안에 m
 - 인포그래픽/차트/다이어그램은 AI 티가 나므로 절대 생성하지 않는다
 - **이미지 관련성 검수**: blog-writer agent가 Read 도구로 이미지 파일을 직접 열어 주제 관련성을 시각적으로 확인. 무관한 이미지 발견 시 즉시 재생성 또는 Wikimedia 재검색.
 
+### WordPress 인라인 스타일 필수
+
+WordPress는 포스트 콘텐츠 내 `<style>` 블록이나 클래스 기반 CSS를 무시한다. 아래 요소들은 반드시 인라인 스타일을 적용해야 렌더링된다:
+
+```html
+<!-- article-tags -->
+<div class="article-tags" style="display:flex;flex-wrap:wrap;gap:8px;margin:48px 0 40px;padding-top:32px;border-top:1px solid #e5e5e5;">
+  <a class="article-tag" href="#" style="display:inline-block;font-size:12.5px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:5px 12px;border-radius:999px;text-decoration:none;">태그명</a>
+</div>
+
+<!-- highlight-box -->
+<div class="highlight-box" style="background:#111;color:#fff;padding:24px 28px;border-radius:12px;">
+  <p style="color:#eee;font-size:1rem;font-weight:500;line-height:1.8;margin:0;">텍스트</p>
+</div>
+```
+
+기존 발행 글에 일괄 적용할 경우 WP REST API `?context=edit`으로 raw 콘텐츠를 가져와 regex로 교체 후 재발행한다.
+
 ### WordPress 발행 + 미디어 업로드
 
 `src/publisher.py`가 글 발행과 이미지 업로드를 모두 처리한다:
