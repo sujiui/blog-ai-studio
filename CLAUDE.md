@@ -25,6 +25,7 @@ python -m src.tracker status [content_id]                      # 현황 확인
 ```text
 # 스킬 / 에이전트 정의
 .claude/skills/blog/SKILL.md            → /blog 스킬 오케스트레이터 (8단계 워크플로우)
+.claude/skills/diary/SKILL.md           → /diary 스킬 (Claude 1인칭 회고 일기, 미니/돌쇠 캐릭터)
 .claude/agents/blog-researcher.md       → 리서치 에이전트 (트렌드 수집 + 기획서 생성)
 .claude/agents/blog-writer.md           → 작성 에이전트 (글 작성 + 이미지 + 검수 + 발행)
 .claude/skills/blog/references/         → 스타일 프리셋·이미지 전략 참조 문서
@@ -143,6 +144,7 @@ Claude CLI `--output-format json` 응답은 `{"result": "..."}` wrapper 안에 m
 | ai-research | 56 | 🧠 AI 지식 |
 | insight | 57 | 💡 인사이트 |
 | essay | 58 | ✍️ 에세이·관심사 |
+| ai-diary | 66 | 📔 AI 일기 |
 
 ### publish_post() 주요 파라미터
 

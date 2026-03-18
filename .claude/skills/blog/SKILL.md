@@ -113,6 +113,12 @@ Agent 프롬프트에 포함할 내용:
 - Content Rules: CTA 제한사항 (허용: 댓글 유도, 관련 글 추천, 구독, 공유)
 - `<!-- IMAGE_N: description -->` 마커를 본문에 삽입
 
+**WordPress 인라인 스타일 필수 적용** (Additional CSS가 포스트 콘텐츠에 안 먹는 요소들):
+
+- **highlight-box**: `<div class="highlight-box" style="background:#111;color:#fff;padding:24px 28px;border-radius:12px;">` + 내부 `<p style="color:#eee;font-size:1rem;font-weight:500;line-height:1.8;margin:0;">`
+- **article-tags**: `<div class="article-tags" style="display:flex;flex-wrap:wrap;gap:8px;margin:48px 0 40px;padding-top:32px;border-top:1px solid #e5e5e5;">`
+- **article-tag (각각)**: `<a class="article-tag" href="#" style="display:inline-block;font-size:12.5px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:5px 12px;border-radius:999px;text-decoration:none;">`
+
 **출력**: 본문 텍스트 (HTML 또는 Markdown, 주제에 따라 유연하게) + 이미지 마커
 
 ---
@@ -187,6 +193,9 @@ blog-writer Agent가 품질 검수를 수행하고 최종 출력한다.
 4. 발행 결과(post ID, URL)를 metadata.json에 기록
 5. **실패 처리**: WordPress 연결 실패 시 로컬 output만 저장 + "수동 발행 필요" 안내
 6. Notion 동기화는 발행 완료 후에만 수행 (별도 트리거)
+7. **발행 후 수동 작업 안내** (사용자에게 명확히 고지):
+   - WP Admin → 해당 글 편집 → RankMath 패널에서 **Focus Keyword 수동 입력** 필요
+   - Focus Keyword는 REST API로 설정 불가 (RankMath 미등록 필드)
 
 **최종 출력**:
 - `output/{date}_{topic}/` 디렉토리에 결과물 저장
